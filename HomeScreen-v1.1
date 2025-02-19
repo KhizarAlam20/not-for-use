@@ -1,0 +1,145 @@
+import React, { useState, useRef } from 'react';
+import { FlatList, View, Text, Image, StyleSheet, Dimensions, TouchableWithoutFeedback, Animated } from 'react-native';
+import Video from 'react-native-video';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
+
+const { height } = Dimensions.get('window'); // Get screen height
+
+// Sample data for videos
+const reelsData = [
+  {
+    id: '1',
+    videoUrl: 'https://res.cloudinary.com/dityjpdl6/video/upload/v1739964303/mdaqdcmku37txqzbt21f.mp4',
+    user: { name: 'John Doe', picture: require('./user1.jpg') },
+    content: { description: 'Exploring the best food in town!' },
+  },
+  {
+    id: '2',
+    videoUrl: 'https://res.cloudinary.com/dityjpdl6/video/upload/v1739964303/mdaqdcmku37txqzbt21f.mp4',
+    user: { name: 'Jane Smith', picture: require('./user1.jpg') },
+    content: { description: 'Amazing food adventures!' },
+  },
+  // Add more items as needed
+];
+
+const HomeScreen = () => {
+  const flatListRef = useRef(null); // Reference to FlatList
+  const [pausedState, setPausedState] = useState({});
+
+  // Handle Play/Pause for each video
+  const togglePlayPause = (id) => {
+    setPausedState((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Get the layout for each item, ensuring it takes full screen height
+  const getItemLayout = (data, index) => ({
+    length: height, // Set each item height to full screen height
+    offset: height * index, // Offset based on index
+    index,
+  });
+
+  // Calculate snap offsets for the scroll
+  const snapToOffsets = reelsData.map((_, index) => index * height);
+
+  // Render each item in the FlatList
+  const renderItem = ({ item }) => (
+    <TouchableWithoutFeedback onPress={() => togglePlayPause(item.id)}>
+      <View style={styles.reelContainer}>
+        <Video
+          source={{ uri: item.videoUrl }}
+          style={styles.video}
+          resizeMode="cover"
+          repeat
+          paused={pausedState[item.id]}
+        />
+        <LinearGradient colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.6)']} style={styles.gradientOverlay}>
+          <View style={styles.header}>
+            <Text style={styles.appName}>FoodReels</Text>
+          </View>
+
+          <View style={styles.contentContainer}>
+            <View style={styles.userContainer}>
+              <Image source={item.user.picture} style={styles.userImage} />
+              <Text style={styles.userName}>{item.user.name}</Text>
+            </View>
+
+            <Text style={styles.description}>{item.content.description}</Text>
+          </View>
+        </LinearGradient>
+      </View>
+    </TouchableWithoutFeedback>
+  );
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <FlatList
+        ref={flatListRef}
+        data={reelsData}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        snapToOffsets={snapToOffsets} // Set snap offsets for each item
+        decelerationRate="fast" // Ensures smooth scrolling and snapping
+        getItemLayout={getItemLayout} // Defines the layout of each item
+        initialScrollIndex={0} // Start from the first item
+        contentContainerStyle={{ paddingBottom: 0 }} // Padding for bottom tab
+        removeClippedSubviews={true} // This prevents unnecessary re-renders
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  reelContainer: {
+    height: height,
+    width: '100%',
+  },
+  video: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    padding: 12,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  appName: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  contentContainer: {
+    marginTop: 20,
+  },
+  userContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
+  },
+  description: {
+    fontSize: 14,
+    color: 'white',
+    marginTop: 8,
+  },
+});
+
+export default HomeScreen;
